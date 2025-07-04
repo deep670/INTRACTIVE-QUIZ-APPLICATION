@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quick GK Quiz</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f5f5f5;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+
+    .quiz-box {
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      width: 100%;
+      max-width: 500px;
+    }
+
+    h1, h2 {
+      color: #333;
+      text-align: center;
+    }
+
+    .btn {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      margin: 10px 0;
+      border-radius: 5px;
+      cursor: pointer;
+      width: 100%;
+      font-size: 16px;
+    }
+
+    .btn:hover {
+      background: #45a049;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      box-sizing: border-box;
+    }
+
+    .question {
+      margin-bottom: 20px;
+    }
+
+    .options {
+      display: grid;
+      gap: 10px;
+    }
+
+    .option {
+      padding: 10px;
+      background: #f9f9f9;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .option.selected {
+      background: #d4edda;
+    }
+
+    .option.correct {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .option.wrong {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .feedback {
+      margin-top: 10px;
+      padding: 10px;
+      border-radius: 5px;
+      display: none;
+    }
+
+    .correct-feedback {
+      background: #d4edda;
+      color: #155724;
+    }
+
+    .wrong-feedback {
+      background: #f8d7da;
+      color: #721c24;
+    }
+
+    .progress {
+      height: 10px;
+      background: #e9ecef;
+      border-radius: 5px;
+      margin-bottom: 20px;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: #4CAF50;
+      border-radius: 5px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    .hidden {
+      display: none;
+    }
+
+    @keyframes fadeInHighlight {
+      0% {
+        background-color: #fff3cd;
+        opacity: 0;
+      }
+      100% {
+        background-color: transparent;
+        opacity: 1;
+      }
+    }
+
+    .animate-highlight {
+      animation: fadeInHighlight 0.8s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Page -->
+  <div class="quiz-box" id="login-page">
+    <h1>Welcome to GK Quiz</h1>
+    <input type="text" id="username" placeholder="Enter your name">
+    <button class="btn" id="start-btn">Start Quiz</button>
+  </div>
+
+  <!-- Quiz Page -->
+  <div class="quiz-box hidden" id="quiz-page">
+    <h2 id="question-number">Question 1</h2>
+    <div class="progress">
+      <div class="progress-bar" id="progress-bar"></div>
+    </div>
+    <div class="question" id="question-text">Loading question...</div>
+    <div class="options" id="options"></div>
+    <div class="feedback correct-feedback" id="correct-feedback"></div>
+    <div class="feedback wrong-feedback" id="wrong-feedback"></div>
+    <button class="btn hidden" id="next-btn">Next Question</button>
+  </div>
+
+  <!-- Results Page -->
+  <div class="quiz-box hidden" id="results-page">
+    <h1>Quiz Results</h1>
+    <h2 id="user-name">User Name</h2>
+    <p>Your score: <span id="score">0</span> out of <span id="total">5</span></p>
+    <button class="btn" id="restart-btn">Take Quiz Again</button>
+  </div>
+
+  <script>
+    const questions = [
+      {
+        question: "What is the national flag of India called?",
+        options: ["Tiranga", "Tricolor", "Ashoka Chakra", "National Emblem"],
+        answer: 0,
+        feedback: "The national flag of India is called 'Tiranga' which means 'tricolor'."
+      },
+      {
+        question: "What is the national animal of India?",
+        options: ["Elephant", "Lion", "Tiger", "Leopard"],
+        answer: 2,
+        feedback: "The national animal of India is the Royal Bengal Tiger."
+      },
+      {
+        question: "What is the national bird of India?",
+        options: ["Peacock", "Parrot", "Sparrow", "Eagle"],
+        answer: 0,
+        feedback: "The national bird of India is the Indian Peacock."
+      },
+      {
+        question: "What is the national tree of India?",
+        options: ["Neem", "Banyan", "Ashoka", "Peepal"],
+        answer: 1,
+        feedback: "The national tree of India is the Banyan tree."
+      },
+      {
+        question: "What is the national flower of India?",
+        options: ["Rose", "Lotus", "Jasmine", "Sunflower"],
+        answer: 1,
+        feedback: "The national flower of India is the Lotus."
+      }
+    ];
+
+    const loginPage = document.getElementById('login-page');
+    const quizPage = document.getElementById('quiz-page');
+    const resultsPage = document.getElementById('results-page');
+    const usernameInput = document.getElementById('username');
+    const startBtn = document.getElementById('start-btn');
+    const questionNumber = document.getElementById('question-number');
+    const questionText = document.getElementById('question-text');
+    const optionsContainer = document.getElementById('options');
+    const correctFeedback = document.getElementById('correct-feedback');
+    const wrongFeedback = document.getElementById('wrong-feedback');
+    const nextBtn = document.getElementById('next-btn');
+    const progressBar = document.getElementById('progress-bar');
+    const userName = document.getElementById('user-name');
+    const scoreElement = document.getElementById('score');
+    const totalElement = document.getElementById('total');
+    const restartBtn = document.getElementById('restart-btn');
+
+    let currentQuestion = 0;
+    let score = 0;
+    let selectedOption = null;
+    let user = "";
+
+    function initQuiz() {
+      user = usernameInput.value.trim();
+      if (!user) {
+        alert("Please enter your name");
+        return;
+      }
+
+      loginPage.classList.add('hidden');
+      quizPage.classList.remove('hidden');
+      totalElement.textContent = questions.length;
+      showQuestion();
+    }
+
+    function showQuestion() {
+      optionsContainer.innerHTML = '';
+      correctFeedback.style.display = 'none';
+      wrongFeedback.style.display = 'none';
+      nextBtn.classList.add('hidden');
+      selectedOption = null;
+
+      // Add animation effect
+      questionText.classList.remove('animate-highlight');
+      optionsContainer.classList.remove('animate-highlight');
+      void questionText.offsetWidth; // reflow trick
+      questionText.classList.add('animate-highlight');
+      optionsContainer.classList.add('animate-highlight');
+
+      questionNumber.textContent = `Question ${currentQuestion + 1}`;
+      progressBar.style.width = `${((currentQuestion) / questions.length) * 100}%`;
+
+      const q = questions[currentQuestion];
+      questionText.textContent = q.question;
+
+      q.options.forEach((option, index) => {
+        const optionElement = document.createElement('div');
+        optionElement.classList.add('option');
+        optionElement.textContent = option;
+        optionElement.addEventListener('click', () => selectOption(optionElement, index));
+        optionsContainer.appendChild(optionElement);
+      });
+    }
+
+    function selectOption(optionElement, index) {
+      if (selectedOption !== null) return;
+
+      selectedOption = index;
+      optionElement.classList.add('selected');
+
+      const q = questions[currentQuestion];
+      if (index === q.answer) {
+        optionElement.classList.add('correct');
+        correctFeedback.textContent = q.feedback;
+        correctFeedback.style.display = 'block';
+        score++;
+      } else {
+        optionElement.classList.add('wrong');
+        optionsContainer.children[q.answer].classList.add('correct');
+        wrongFeedback.textContent = q.feedback;
+        wrongFeedback.style.display = 'block';
+      }
+
+      nextBtn.classList.remove('hidden');
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < questions.length) {
+        showQuestion();
+      } else {
+        showResults();
+      }
+    }
+
+    function showResults() {
+      quizPage.classList.add('hidden');
+      resultsPage.classList.remove('hidden');
+      userName.textContent = user;
+      scoreElement.textContent = score;
+      progressBar.style.width = '100%';
+    }
+
+    function restartQuiz() {
+      currentQuestion = 0;
+      score = 0;
+      resultsPage.classList.add('hidden');
+      loginPage.classList.remove('hidden');
+      usernameInput.value = '';
+      progressBar.style.width = '0%';
+    }
+
+    startBtn.addEventListener('click', initQuiz);
+    nextBtn.addEventListener('click', nextQuestion);
+    restartBtn.addEventListener('click', restartQuiz);
+  </script>
+</body>
+</html>
